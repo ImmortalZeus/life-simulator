@@ -1516,18 +1516,7 @@ const GAME = (function() {
     const roundReturn = totalMarketValue - totalCapital;
 
     // Calculate Cumulative capital invested
-    let cumulativeCapital = 0;
-    for (let r = 1; r <= roundNumber; r++) {
-      const outcome_r = state.rounds[r - 1];
-      if (outcome_r) {
-        let tc = 0;
-        const port_r = outcome_r.portfolio || {};
-        for (const [code, pos] of Object.entries(port_r)) {
-          tc += pos.quantity * pos.avgCost;
-        }
-        cumulativeCapital += tc;
-      }
-    }
+    const cumulativeCapital = totalCapital;
 
     const realizedPnL = outcome.realizedPnL || 0;
     const cumulativeReturnPct = cumulativeCapital > 0
@@ -1553,6 +1542,12 @@ const GAME = (function() {
       cumRetEl.className = cumulativeReturnPct > 0 ? 'num-gain' : (cumulativeReturnPct < 0 ? 'num-loss' : 'num-neutral');
     }
 
+    // Update stock table cost header dynamically
+    const costHeaderEl = document.getElementById('result-stock-cost-header');
+    if (costHeaderEl) {
+      costHeaderEl.textContent = roundNumber === 1 ? 'Cost/Share' : 'Avg Cost';
+    }
+
     // 3. Stock Portfolio Table
     const tbody = document.getElementById('result-stock-tbody');
     if (tbody) {
@@ -1568,7 +1563,6 @@ const GAME = (function() {
       codes.forEach(code => {
         const pos = portfolio[code] || { quantity: 0, avgCost: 0 };
         const price = prices[code];
-        const mktVal = pos.quantity * price;
         const gain = pos.quantity * (price - pos.avgCost);
         const gainPct = pos.avgCost > 0 ? (gain / (pos.quantity * pos.avgCost)) * 100 : 0;
 
@@ -1579,6 +1573,16 @@ const GAME = (function() {
           ? (gain > 0 ? 'num-gain' : (gain < 0 ? 'num-loss' : 'num-neutral'))
           : 'num-neutral';
 
+        // Calculate Cost/Share (Buy Cost for round 1, Avg Cost for round 2+)
+        let costDisplay = '';
+        if (pos.quantity > 0) {
+          costDisplay = UI.formatVND(pos.avgCost);
+        } else if (roundNumber === 1) {
+          costDisplay = UI.formatVND(price * (1 + GAME_DATA.STOCK_TRADING_FEE));
+        } else {
+          costDisplay = '-';
+        }
+
         html += `
           <tr>
             <td>
@@ -1588,8 +1592,8 @@ const GAME = (function() {
               </div>
             </td>
             <td class="text-right">${pos.quantity}</td>
+            <td class="text-right">${costDisplay}</td>
             <td class="text-right">${UI.formatVND(price)}</td>
-            <td class="text-right">${pos.quantity > 0 ? UI.formatVND(mktVal) : '-'}</td>
             <td class="text-right ${gainClass}">${gainText}</td>
           </tr>
         `;
@@ -1674,7 +1678,7 @@ const GAME = (function() {
     if (savClosingValEl) savClosingValEl.textContent = UI.formatVND(closingBalance);
 
     const cashBalValEl = document.getElementById('result-cash-balance-val');
-    if (cashBalValEl) cashBalValEl.textContent = UI.formatVND(endStats.cash);
+    if (cashBalValEl) cashBalValEl.textContent = UI.formatVND(endStats.cash - closingBalance);
 
     const netWorthValEl = document.getElementById('result-net-worth-val');
     if (netWorthValEl) netWorthValEl.textContent = UI.formatVND(endStats.cash + totalMarketValue);
