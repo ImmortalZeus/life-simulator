@@ -391,7 +391,7 @@ const HEALTH = (() => {
   function calcPortfolioValue(portfolio, prices) {
     let total = 0;
     for (const [code, pos] of Object.entries(portfolio)) {
-      total += pos.quantity * (prices[code] || 0);
+      total += pos.quantity * (prices[code] || 0) * (1 + GAME_DATA.STOCK_TRADING_FEE);
     }
     return total;
   }

@@ -1261,7 +1261,7 @@ const GAME = (function() {
         state.stockPurchases = (state.stockPurchases || 0) + totalCost;
         const pos = state.portfolio[code] || { quantity: 0, avgCost: 0 };
         const newQty = pos.quantity + qty;
-        const newAvgCost = ((pos.avgCost * pos.quantity) + cost) / newQty;
+        const newAvgCost = ((pos.avgCost * pos.quantity) + totalCost) / newQty;
 
         state.portfolio[code] = {
           quantity: newQty,
@@ -1343,7 +1343,8 @@ const GAME = (function() {
     const barCash = document.getElementById('bar-cash-val');
     if (barCash) {
       const prev = state.stats.cash;
-      const proj = newState.stats.cash;
+      const closingBalance = state.savingsBalance + result.income.savingsInterest;
+      const proj = newState.stats.cash - closingBalance;
       barCash.textContent = UI.formatVND(proj);
       updatePreviewLabelClass(barCash, proj, prev);
     }
@@ -1673,7 +1674,7 @@ const GAME = (function() {
     if (savClosingValEl) savClosingValEl.textContent = UI.formatVND(closingBalance);
 
     const cashBalValEl = document.getElementById('result-cash-balance-val');
-    if (cashBalValEl) cashBalValEl.textContent = UI.formatVND(endStats.cash - closingBalance);
+    if (cashBalValEl) cashBalValEl.textContent = UI.formatVND(endStats.cash);
 
     const netWorthValEl = document.getElementById('result-net-worth-val');
     if (netWorthValEl) netWorthValEl.textContent = UI.formatVND(endStats.cash + totalMarketValue);
