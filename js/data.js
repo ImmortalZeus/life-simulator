@@ -657,7 +657,7 @@ const SAVINGS_RATE_ADJUSTMENTS = [0, 0.005, -0.015, 0.015, -0.005];
       text: "You get tricked by an online scam and lose a lot of money. The financial loss really hurts, but what makes you angrier is how stupid you feel for believing them. You are left feeling totally embarrassed and deeply frustrated.",
       tag: 'negative',
       rarity: 'ultra_rare',
-      weight: 7,
+      weight: 2,
       impact: { cash: -80000000, mentalHealth: -10 }
     },
     {
