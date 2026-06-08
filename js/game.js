@@ -816,21 +816,10 @@ const GAME = (function() {
     let html = `
       <div class="market-text">
         <p class="market-year-title">Year ${round} (Age ${age}): ${data.title}</p>
-        <p class="market-year-description" style="margin-bottom: var(--space-3); color: var(--color-text-secondary); font-size: var(--font-size-sm); line-height: 1.5;">
-          ${data.scenarioOverview}
+        <p class="market-year-description" style="margin-bottom: var(--space-3); color: var(--color-text-secondary); font-size: var(--font-size-sm); line-height: 1.6; font-style: normal;">
+          ${data.sectorInfo || data.scenarioOverview}
         </p>
     `;
-
-    data.events.forEach(subEvent => {
-      html += `
-        <div class="market-event-item" style="margin-bottom: var(--space-3);">
-          <strong>${subEvent.title}:</strong> ${subEvent.text}
-          <div class="market-event-impact" style="margin-top: 4px; font-size: var(--font-size-xs); color: var(--color-primary); font-weight: 500;">
-            ${subEvent.impact}
-          </div>
-        </div>
-      `;
-    });
 
     const balance = state.savingsBalance || 0;
     const rate = GAME_DATA.getSavingsRate(balance, round, state.savingsRateAdjustment || 0);
@@ -2003,9 +1992,13 @@ const GAME = (function() {
     // Outcome round index is state.currentRound - 1
     const completedRoundIdx = completedRound - 1;
 
+    let roundStockChanges = null;
+
     // Update stock prices for the next round
     if (!state.loseCondition && state.currentRound <= 5) {
-      state.currentPrices = HEALTH.updateStockPrices(state.currentPrices, completedRound, completedBranch);
+      const { newPrices, stockPriceChanges } = HEALTH.updateStockPrices(state.currentPrices, completedRound, completedBranch);
+      state.currentPrices = newPrices;
+      roundStockChanges = stockPriceChanges;
       
       // Advance market branch for the new round
       const currentBranchData = GAME_DATA.MARKET_EVENT_TREE[completedBranch];
@@ -2033,6 +2026,9 @@ const GAME = (function() {
       state.rounds[completedRoundIdx].stockSells = state.stockSells || 0;
       state.rounds[completedRoundIdx].savingsOpening = state.savingsOpening || 0;
       state.rounds[completedRoundIdx].realizedPnL = state.realizedPnL || 0;
+      if (roundStockChanges) {
+        state.rounds[completedRoundIdx].stockPriceChanges = roundStockChanges;
+      }
     }
     
     // Set screen status for F5 safety
@@ -2078,28 +2074,21 @@ const GAME = (function() {
 
       const age = GAME_DATA.ROUNDS[r - 1]?.age || (22 + r - 1);
 
-      let eventsHtml = '';
-      data.events.forEach(subEvent => {
-        eventsHtml += `
-          <div style="margin-bottom: var(--space-2); padding-left: var(--space-2); border-left: 2px solid var(--color-navy-muted);">
-            <div style="font-weight: var(--fw-bold); color: var(--color-navy); font-size: var(--fs-body);">${subEvent.title}</div>
-            <div style="color: var(--color-text-secondary); font-size: var(--fs-small); line-height: 1.4; margin-top: 2px;">${subEvent.text}</div>
-            <div style="font-size: var(--fs-micro); color: var(--color-primary); font-weight: 500; margin-top: 2px;">${subEvent.impact}</div>
-          </div>
-        `;
-      });
-
-      // Stock changes formatting
+      // Stock changes formatting - only for past/completed rounds
       let stockChangesStr = '';
-      if (data.stockPriceChanges) {
-        const changes = [];
-        for (const [stock, change] of Object.entries(data.stockPriceChanges)) {
-          const sign = change > 0 ? '+' : '';
-          const percent = (change * 100).toFixed(0) + '%';
-          const color = change > 0 ? 'var(--color-gain)' : (change < 0 ? 'var(--color-loss)' : 'var(--color-neutral)');
-          changes.push(`<span style="color: ${color}; font-weight: var(--fw-bold);">${stock}: ${sign}${percent}</span>`);
+      if (r < state.currentRound) {
+        const roundData = state.rounds[r - 1];
+        const changes = roundData?.stockPriceChanges;
+        if (changes) {
+          const parts = [];
+          for (const [stock, change] of Object.entries(changes)) {
+            const sign = change > 0 ? '+' : '';
+            const percent = (change * 100).toFixed(1) + '%';
+            const color = change > 0 ? 'var(--color-gain)' : (change < 0 ? 'var(--color-loss)' : 'var(--color-neutral)');
+            parts.push(`<span style="color: ${color}; font-weight: var(--fw-bold);">${stock}: ${sign}${percent}</span>`);
+          }
+          stockChangesStr = parts.join(' &nbsp;·&nbsp; ');
         }
-        stockChangesStr = changes.join(' &nbsp;·&nbsp; ');
       }
 
       const rate = GAME_DATA.getSavingsRate(currentSavingsBalance, r, currentSavingsRateAdjustment);
@@ -2111,12 +2100,9 @@ const GAME = (function() {
             <h3 style="margin: 0; color: var(--color-navy); font-family: var(--font-display); font-size: var(--fs-h2);">Year ${r} (Age ${age}): ${data.title}</h3>
             ${r === state.currentRound ? '<span style="background-color: var(--color-navy); color: var(--color-text-white); font-size: var(--fs-micro); font-weight: var(--fw-bold); padding: 2px 6px; border-radius: var(--radius-xs); text-transform: uppercase;">Active</span>' : ''}
           </div>
-          <p style="color: var(--color-text-primary); font-size: var(--fs-body); line-height: 1.5; margin-bottom: var(--space-3); font-style: italic;">
-            ${data.scenarioOverview}
+          <p style="color: var(--color-text-primary); font-size: var(--fs-body); line-height: 1.5; margin-bottom: var(--space-3); font-style: normal;">
+            ${data.sectorInfo || data.scenarioOverview}
           </p>
-          <div style="display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-3);">
-            ${eventsHtml}
-          </div>
           <div style="background-color: var(--color-bg-white); border: 1px solid var(--color-border); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); font-size: var(--fs-small); display: flex; flex-direction: column; gap: 4px; line-height: 1.4;">
             ${stockChangesStr ? `
             <div style="display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;">
