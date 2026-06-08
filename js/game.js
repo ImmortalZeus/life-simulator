@@ -332,9 +332,9 @@ const GAME = (function() {
       if (prevOT > 0) {
         let triggerProb = 0;
         if (prevOT === 10) triggerProb = 0.20;
-        else if (prevOT === 20) triggerProb = 0.40;
-        else if (prevOT === 30) triggerProb = 0.60;
-        else if (prevOT === 40) triggerProb = 0.80;
+        else if (prevOT === 20) triggerProb = 0.50;
+        else if (prevOT === 30) triggerProb = 0.80;
+        else if (prevOT === 40) triggerProb = 1.0;
 
         if (Math.random() <= triggerProb) {
           let tier = 'minor';
