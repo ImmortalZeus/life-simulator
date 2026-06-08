@@ -167,9 +167,9 @@ Start-of-round events are rolled at the beginning of each round (except when hea
 ### 5.2 Job-Reward Events
 - **Trigger Probability:** Based on overtime hours from the *previous* round:
   - $10$ Hours OT: $20\%$ chance
-  - $20$ Hours OT: $40\%$ chance
-  - $30$ Hours OT: $60\%$ chance
-  - $40$ Hours OT: $80\%$ chance
+  - $20$ Hours OT: $50\%$ chance
+  - $30$ Hours OT: $80\%$ chance
+  - $40$ Hours OT: $100\%$ chance
 - **Tier Selection Weights:**
   - **10 Hours OT:** Minor ($70\%$), Moderate ($30\%$)
   - **20 Hours OT:** Minor ($50\%$), Moderate ($50\%$)
