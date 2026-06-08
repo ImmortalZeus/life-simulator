@@ -309,14 +309,6 @@ const GAME = (function() {
   function initRoundDecisions() {
     if (!state) return;
     state.currentDecision = GAME_DATA.createRoundDecision(state.currentRound);
-    
-    // Carry over previous expenses if round > 1
-    if (state.currentRound > 1) {
-      const prevDecision = state.rounds[state.currentRound - 2]?.decisions;
-      if (prevDecision && prevDecision.expenses) {
-        state.currentDecision.expenses = { ...prevDecision.expenses };
-      }
-    }
   }
 
   function rollRoundEvents(round) {
@@ -1014,18 +1006,12 @@ const GAME = (function() {
     categories.forEach(cat => {
       const meta = EXPENSE_METADATA[cat];
       
-      // Get base cost: previous round's actual chosen expense, or default BASE_EXPENSES * monthlySalary
-      let baseCost = Math.round(GAME_DATA.BASE_EXPENSES[cat] * metaRound.monthlySalary);
-      if (round > 1) {
-        const prevDec = state.rounds[round - 2]?.decisions;
-        if (prevDec && prevDec.expenses && prevDec.expenses[cat] !== undefined) {
-          baseCost = prevDec.expenses[cat];
-        }
-      }
+      // Get base cost from new round-by-round base costs
+      const baseCost = GAME_DATA.getBaseExpense(cat, round);
 
-      // If player already entered a budget for this round, show it in the Base Cost column as confirmed
+      // Base Cost stays constant as a reference baseline
       const currentVal = state.currentDecision.expenses[cat];
-      const displayedBaseCost = (currentVal !== undefined && currentVal !== 0) ? currentVal : baseCost;
+      const displayedBaseCost = baseCost;
       const displayVal = currentVal !== undefined ? currentVal.toLocaleString('vi-VN') : '';
       const minCost = GAME_DATA.MIN_EXPENSES[cat] || 0;
 
@@ -1186,35 +1172,30 @@ const GAME = (function() {
   function attachExpenseListeners() {
     const inputs = document.querySelectorAll('.expense-input');
     inputs.forEach(input => {
+      // 1. Format text formatting live as the user types (no state update, no preview jump)
       input.addEventListener('input', () => {
         let valStr = input.value.replace(/[^\d]/g, '');
         let val = parseInt(valStr) || 0;
         input.value = val > 0 ? val.toLocaleString('vi-VN') : '';
-        
-        const cat = input.dataset.category;
-        const minCost = GAME_DATA.MIN_EXPENSES[cat] || 0;
-        state.currentDecision.expenses[cat] = Math.max(val, minCost);
-        updateLivePreview();
       });
 
+      // 2. Click away (blur) reverts the input text to the last committed budget in the state
       input.addEventListener('blur', () => {
-        const cat = input.dataset.category;
-        let valStr = input.value.replace(/[^\d]/g, '');
-        let val = parseInt(valStr) || 0;
-        
-        const minCost = GAME_DATA.MIN_EXPENSES[cat] || 0;
-        if (val < minCost) {
-          const EXPENSE_NAMES = {
-            housing: 'Housing', utility: 'Utility', food: 'Food',
-            transport: 'Transport', healthcare: 'Healthcare', entertainment: 'Entertainment'
-          };
-          UI.toast.warning(`Budget for ${EXPENSE_NAMES[cat]} cannot be lower than the Minimum Cost (${UI.formatVND(minCost)}).`);
-          val = minCost;
-          input.value = val > 0 ? val.toLocaleString('vi-VN') : '';
-        }
+        setTimeout(() => {
+          const cat = input.dataset.category;
+          const committedVal = state.currentDecision.expenses[cat] || GAME_DATA.MIN_EXPENSES[cat] || 0;
+          input.value = committedVal > 0 ? committedVal.toLocaleString('vi-VN') : '';
+        }, 150);
+      });
 
-        state.currentDecision.expenses[cat] = val;
-        updateLivePreview();
+      // 3. Pressing Enter key on the keyboard triggers the row's Enter button click
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const cat = input.dataset.category;
+          const btn = document.querySelector(`.expense-enter-btn[data-category="${cat}"]`);
+          if (btn) btn.click();
+        }
       });
     });
 
@@ -1242,15 +1223,6 @@ const GAME = (function() {
           }
 
           state.currentDecision.expenses[cat] = val;
-
-          // Update the Base Cost column cell in this row immediately
-          const row = btn.closest('tr');
-          if (row) {
-            const baseCostCell = row.querySelector('.cell-base');
-            if (baseCostCell) {
-              baseCostCell.textContent = UI.formatVND(val);
-            }
-          }
 
           UI.toast.success(`Set budget for ${EXPENSE_NAMES[cat]} to ${UI.formatVND(val)}`);
           updateLivePreview();
@@ -1446,7 +1418,7 @@ const GAME = (function() {
       const categories = ['housing', 'utility', 'food', 'transport', 'healthcare', 'entertainment'];
       const EXPENSE_NAMES = {
         housing: 'Housing', utility: 'Utility', food: 'Food',
-        transport: 'Transportation', healthcare: 'Medical', entertainment: 'Entertainment'
+        transport: 'Transport', healthcare: 'Healthcare', entertainment: 'Entertainment'
       };
 
       categories.forEach(cat => {

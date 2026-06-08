@@ -412,7 +412,7 @@ const SAVINGS_RATE_ADJUSTMENTS = [0, 0.005, -0.015, 0.015, -0.005];
       currentRound: 1,
       stats: {
         cash:           0,
-        investment:     5_000_000,
+        investment:     10_000_000,
         physicalHealth: 70,
         mentalHealth:   70,
       },
@@ -426,8 +426,8 @@ const SAVINGS_RATE_ADJUSTMENTS = [0, 0.005, -0.015, 0.015, -0.005];
         'REA-V': { quantity: 0, avgCost: 0 },
         'ENE-G': { quantity: 0, avgCost: 0 },
       },
-      savingsBalance: 5_000_000,
-      savingsOpening: 5_000_000,
+      savingsBalance: 10_000_000,
+      savingsOpening: 10_000_000,
       hasInsurance:   false,
       realizedPnL:    0,
       // Current stock prices (updated each round)
@@ -445,13 +445,60 @@ const SAVINGS_RATE_ADJUSTMENTS = [0, 0.005, -0.015, 0.015, -0.005];
     };
   }
 
+  const ROUND_BASE_COSTS = {
+    1: {
+      healthcare:    799500,
+      entertainment: 4500000,
+      housing:       3750000,
+      food:          2550000,
+      utility:       700500,
+      transport:     499500
+    },
+    2: {
+      healthcare:    1070000,
+      entertainment: 6000000,
+      housing:       5000000,
+      food:          3400000,
+      utility:       930000,
+      transport:     666000
+    },
+    3: {
+      healthcare:    1330000,
+      entertainment: 7500000,
+      housing:       6250000,
+      food:          4250000,
+      utility:       1170000,
+      transport:     832500
+    },
+    4: {
+      healthcare:    1870000,
+      entertainment: 10500000,
+      housing:       8750000,
+      food:          5950000,
+      utility:       1630000,
+      transport:     1162500
+    },
+    5: {
+      healthcare:    2400000,
+      entertainment: 13500000,
+      housing:       11250000,
+      food:          7650000,
+      utility:       2100000,
+      transport:     1498500
+    }
+  };
+
+  function getBaseExpense(category, round) {
+    return ROUND_BASE_COSTS[round]?.[category] || 0;
+  }
+
   /** Expense template for a single round */
   function createRoundDecision(round) {
-    const meta = ROUNDS[round - 1];
     const expenses = {};
-    for (const [key, ratio] of Object.entries(BASE_EXPENSES)) {
-      expenses[key] = Math.round(ratio * meta.monthlySalary);
-    }
+    const categories = ['housing', 'utility', 'food', 'transport', 'healthcare', 'entertainment'];
+    categories.forEach(cat => {
+      expenses[cat] = getBaseExpense(cat, round);
+    });
     return {
       round,
       // Income choices
@@ -1399,6 +1446,7 @@ const SAVINGS_RATE_ADJUSTMENTS = [0, 0.005, -0.015, 0.015, -0.005];
     getHealthcareRecovery,
     getHealthThreshold,
     getCharacterSVG,
+    getBaseExpense,
     createInitialState,
     createRoundDecision,
   };
