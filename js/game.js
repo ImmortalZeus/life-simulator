@@ -2304,16 +2304,43 @@ const GAME = (function() {
     const savingsBtn = document.getElementById('invest-savings-btn');
     if (savingsInput && savingsBtn) {
       savingsInput.addEventListener('blur', () => {
-        const rawVal = savingsInput.value.replace(/[^\d]/g, '');
-        const val = parseInt(rawVal) || 0;
+        const rawVal = savingsInput.value.trim();
+        if (rawVal === '') return;
+
+        // Reject negative input or non-numeric characters (except separators)
+        if (rawVal.includes('-')) {
+          UI.toast.warning("Error: deposit amount must be a positive integer greater than 1,000,000 VND.");
+          savingsInput.value = '';
+          return;
+        }
+
+        const val = parseInt(rawVal.replace(/[^\d]/g, '')) || 0;
+        if (val < 1000000) {
+          UI.toast.warning("Error: deposit amount must be greater than 1,000,000 VND.");
+          savingsInput.value = '';
+          return;
+        }
         savingsInput.value = val !== 0 ? val.toLocaleString('vi-VN') : '';
       });
 
       savingsBtn.addEventListener('click', () => {
-        const rawVal = savingsInput.value.replace(/[^\d]/g, '');
-        const amount = parseInt(rawVal) || 0;
-        if (amount <= 0) {
+        const rawText = savingsInput.value.trim();
+        if (rawText === '') {
           UI.toast.warning("Please enter a valid deposit amount.");
+          return;
+        }
+
+        // Reject negative input
+        if (rawText.includes('-')) {
+          UI.toast.warning("Error: deposit amount must be a positive integer greater than 1,000,000 VND.");
+          savingsInput.value = '';
+          return;
+        }
+
+        const amount = parseInt(rawText.replace(/[^\d]/g, '')) || 0;
+        if (amount < 1000000) {
+          UI.toast.warning("Error: deposit amount must be greater than 1,000,000 VND.");
+          savingsInput.value = '';
           return;
         }
 
