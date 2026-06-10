@@ -546,7 +546,7 @@ const SAVINGS_RATE_ADJUSTMENTS = [0, 0.005, -0.015, 0.015, -0.005];
       tag: 'positive',
       rarity: 'common',
       weight: 10,
-      impact: { mentalHealth: -1 }
+      impact: { mentalHealth: 1 }
     },
     {
       id: 'rand_volunteer',
@@ -602,7 +602,7 @@ const SAVINGS_RATE_ADJUSTMENTS = [0, 0.005, -0.015, 0.015, -0.005];
       tag: 'negative',
       rarity: 'common',
       weight: 10,
-      impact: { mentalHealth: -3 }
+      impact: { mentalHealth: -2 }
     },
     {
       id: 'rand_police',
@@ -626,7 +626,7 @@ const SAVINGS_RATE_ADJUSTMENTS = [0, 0.005, -0.015, 0.015, -0.005];
       tag: 'negative',
       rarity: 'rare',
       weight: 5,
-      impact: { mentalHealth: -10 }
+      impact: { mentalHealth: -7 }
     },
     {
       id: 'rand_netflix',
@@ -642,7 +642,7 @@ const SAVINGS_RATE_ADJUSTMENTS = [0, 0.005, -0.015, 0.015, -0.005];
       tag: 'negative',
       rarity: 'rare',
       weight: 6,
-      impact: { mentalHealth: -8 }
+      impact: { mentalHealth: -6 }
     },
     {
       id: 'rand_report_lost',
@@ -650,7 +650,7 @@ const SAVINGS_RATE_ADJUSTMENTS = [0, 0.005, -0.015, 0.015, -0.005];
       tag: 'negative',
       rarity: 'uncommon',
       weight: 8,
-      impact: { mentalHealth: -4, physicalHealth: -2 }
+      impact: { mentalHealth: -2, physicalHealth: -2 }
     },
     {
       id: 'rand_scam',
@@ -674,7 +674,7 @@ const SAVINGS_RATE_ADJUSTMENTS = [0, 0.005, -0.015, 0.015, -0.005];
       tag: 'negative',
       rarity: 'very_rare',
       weight: 4,
-      impact: { cash: -2000000, mentalHealth: -6 }
+      impact: { cash: -2000000, mentalHealth: -2, physicalHealth: -2 }
     },
     {
       id: 'rand_flat_tire',
@@ -690,7 +690,7 @@ const SAVINGS_RATE_ADJUSTMENTS = [0, 0.005, -0.015, 0.015, -0.005];
       tag: 'negative',
       rarity: 'uncommon',
       weight: 7,
-      impact: { cash: -2500000, mentalHealth: -4, physicalHealth: -1 }
+      impact: { cash: -2500000, mentalHealth: -2, physicalHealth: -1 }
     },
     {
       id: 'rand_driving_fail',
@@ -698,7 +698,7 @@ const SAVINGS_RATE_ADJUSTMENTS = [0, 0.005, -0.015, 0.015, -0.005];
       tag: 'negative',
       rarity: 'uncommon',
       weight: 6,
-      impact: { cash: -1000000, mentalHealth: -5 }
+      impact: { cash: -1000000, mentalHealth: -3 }
     },
     {
       id: 'rand_luggage_lost',
@@ -706,7 +706,7 @@ const SAVINGS_RATE_ADJUSTMENTS = [0, 0.005, -0.015, 0.015, -0.005];
       tag: 'negative',
       rarity: 'very_rare',
       weight: 5,
-      impact: { cash: -5000000, mentalHealth: -5 }
+      impact: { cash: -5000000, mentalHealth: -3 }
     }
   ];
 
