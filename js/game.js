@@ -1428,8 +1428,8 @@ const GAME = (function() {
         const baseRatio = GAME_DATA.BASE_RATIOS[cat];
         const coeff = GAME_DATA.MH_EXPENSE_COEFF[cat];
         
-        // MH impact: 15 * coeff * (baseRatio - actualRatio)
-        const mhImpact = 15 * coeff * (baseRatio - actualRatio);
+        // MH impact: 10.57 * coeff * (baseRatio - actualRatio)
+        const mhImpact = 10.57 * coeff * (baseRatio - actualRatio);
         // PH impact: healthcare recovery for healthcare, 0 otherwise
         const phImpact = (cat === 'healthcare') ? healthcareRecovery : 0;
 
