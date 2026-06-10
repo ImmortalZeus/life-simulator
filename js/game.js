@@ -359,40 +359,84 @@ const GAME = (function() {
     }
 
     // 2. Random Events
-    const N = Math.random() < 0.5 ? 3 : 4;
-    const numRandomToRoll = jobRewardEvent ? N - 1 : N;
+
+    // Lưu ID random event đã xuất hiện trong toàn bộ lượt chơi.
+    // Thuộc state nên tự động được lưu qua localStorage.
+    if (!Array.isArray(state.usedRandomEventIds)) {
+      state.usedRandomEventIds = [];
+    }
+
+    const usedRandomEventIds = new Set(state.usedRandomEventIds);
+
+    // Mỗi round chỉ có 2 hoặc 3 RANDOM events.
+    // Job reward không chiếm slot random event.
+    const requestedRandomCount = Math.random() < 0.5 ? 2 : 3;
+
+    // Nếu gần hết event thì chỉ roll số event còn lại.
+    const remainingRandomCount = GAME_DATA.RANDOM_EVENTS.filter(
+      e => !usedRandomEventIds.has(e.id)
+    ).length;
+
+    const numRandomToRoll = Math.min(
+      requestedRandomCount,
+      remainingRandomCount
+    );
 
     let rolledRandomCount = 0;
     let attempts = 0;
+
     while (rolledRandomCount < numRandomToRoll && attempts < 100) {
       attempts++;
-      const tag = Math.random() <= 0.45 ? 'positive' : 'negative';
+
+      // 45% positive, 55% negative
+      const tag = Math.random() <= 0.45
+        ? 'positive'
+        : 'negative';
+
+      // Chọn rarity
       const rarityRoll = Math.random();
       let rarity = 'common';
+
       if (rarityRoll <= 0.50) rarity = 'common';
       else if (rarityRoll <= 0.75) rarity = 'uncommon';
       else if (rarityRoll <= 0.90) rarity = 'rare';
       else if (rarityRoll <= 0.98) rarity = 'very_rare';
       else rarity = 'ultra_rare';
 
-      const matches = GAME_DATA.RANDOM_EVENTS.filter(e => e.tag === tag && e.rarity === rarity);
-      if (matches.length > 0) {
-        const totalWeight = matches.reduce((sum, e) => sum + e.weight, 0);
-        let rWeight = Math.random() * totalWeight;
-        let selectedEvent = matches[0];
-        for (const e of matches) {
-          rWeight -= e.weight;
-          if (rWeight <= 0) {
-            selectedEvent = e;
-            break;
-          }
-        }
+      // Loại toàn bộ event đã xuất hiện ở các round trước
+      const matches = GAME_DATA.RANDOM_EVENTS.filter(e =>
+        e.tag === tag &&
+        e.rarity === rarity &&
+        !usedRandomEventIds.has(e.id)
+      );
 
-        if (!rolled.some(e => e.id === selectedEvent.id)) {
-          rolled.push(selectedEvent);
-          rolledRandomCount++;
+      if (matches.length === 0) continue;
+
+      // Weighted random
+      const totalWeight = matches.reduce(
+        (sum, e) => sum + e.weight,
+        0
+      );
+
+      let randomWeight = Math.random() * totalWeight;
+      let selectedEvent = matches[0];
+
+      for (const event of matches) {
+        randomWeight -= event.weight;
+
+        if (randomWeight <= 0) {
+          selectedEvent = event;
+          break;
         }
       }
+
+      rolled.push(selectedEvent);
+      rolledRandomCount++;
+
+      // Đánh dấu ngay để không trùng trong round hiện tại
+      // và trong những round tiếp theo.
+      usedRandomEventIds.add(selectedEvent.id);
+      state.usedRandomEventIds.push(selectedEvent.id);
     }
 
     // 3. Expense Penalty Events
