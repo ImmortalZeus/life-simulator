@@ -410,6 +410,7 @@ const SAVINGS_RATE_ADJUSTMENTS = [0, 0.005, -0.015, 0.015, -0.005];
     return {
       playerName,
       currentRound: 1,
+      usedRandomEventIds: [], 
       stats: {
         cash:           0,
         investment:     10_000_000,
