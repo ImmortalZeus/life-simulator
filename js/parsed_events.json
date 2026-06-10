@@ -192,7 +192,7 @@
       "weight": 4,
       "impact": {
         "cash": -2000000,
-        "mentalHealth": -2
+        "mentalHealth": -2,
         "physicalHealth": -2
       }
     },
