@@ -202,18 +202,48 @@ const SAVINGS_RATE_ADJUSTMENTS = [0, 0.005, -0.015, 0.015, -0.005];
    * Indexed as [roundIndex][0..3] = [Q1 max, Q2 max, Q3 max, Q4 max]
    * (Q5 = anything above Q4 max)
    */
-  const QUINTILE_BREAKPOINTS = [
-    // Round 1
-    [17_770_000, 19_380_000, 20_550_000, 21_840_000],
-    // Round 2
-    [22_770_000, 24_380_000, 25_550_000, 26_840_000],
-    // Round 3
-    [27_770_000, 29_380_000, 30_550_000, 31_840_000],
-    // Round 4
-    [37_770_000, 39_380_000, 40_550_000, 41_840_000],
-    // Round 5
-    [47_770_000, 49_380_000, 50_550_000, 51_840_000],
-  ];
+  const QUINTILE_BREAKPOINTS = (() => {
+    const breakpoints = [];
+    const HOUR_OPTIONS = [0, 10, 20, 30, 40];
+    const activeSideJobs = ['bookkeeper', 'adviser', 'tutor', 'blogger'];
+    const sideJobHoursOptions = [10, 20, 30, 40];
+
+    for (let r = 1; r <= 5; r++) {
+      const roundMeta = ROUNDS[r - 1];
+      const monthlySalary = roundMeta.monthlySalary;
+      const otWage = (monthlySalary / 208) * 1.5;
+
+      const incomes = [];
+
+      // 1. Side Job: none (hours is 0)
+      for (const ot of HOUR_OPTIONS) {
+        incomes.push(monthlySalary + otWage * ot);
+      }
+
+      // 2. Active Side Jobs
+      for (const jobKey of activeSideJobs) {
+        const jobData = SIDE_JOBS[jobKey];
+        const jobWage = jobData.wage;
+        for (const ot of HOUR_OPTIONS) {
+          for (const sh of sideJobHoursOptions) {
+            incomes.push(monthlySalary + otWage * ot + jobWage * sh);
+          }
+        }
+      }
+
+      // Sort lowest to highest
+      incomes.sort((a, b) => a - b);
+
+      // Calculate the 4 boundaries separating the 5 groups of 17
+      const b1 = Math.round((incomes[16] + incomes[17]) / 2);
+      const b2 = Math.round((incomes[33] + incomes[34]) / 2);
+      const b3 = Math.round((incomes[50] + incomes[51]) / 2);
+      const b4 = Math.round((incomes[67] + incomes[68]) / 2);
+
+      breakpoints.push([b1, b2, b3, b4]);
+    }
+    return breakpoints;
+  })();
 
   /**
    * Get income quintile (1–5) for a monthly income value.
